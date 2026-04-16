@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>deploy/success — Pujan | DevOps & Data Engineer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0a0c10;
+      --surface: #111418;
+      --border: #1e2530;
+      --green: #3dd68c;
+      --green-dim: #1a6643;
+      --amber: #f5a623;
+      --blue: #58a6ff;
+      --red: #ff6b6b;
+      --text: #cdd9e5;
+      --muted: #5c6e82;
+      --white: #e6edf3;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Grid background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(61,214,140,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(61,214,140,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── TOP BAR ── */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(10,12,16,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2rem;
+      height: 52px;
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
+
+    .topbar-left { display: flex; align-items: center; gap: 1.5rem; }
+    .topbar-left .repo { color: var(--blue); }
+    .topbar-left .branch::before { content: ' ⎇ '; }
+
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(61,214,140,0.08);
+      border: 1px solid var(--green-dim);
+      border-radius: 20px;
+      padding: 2px 10px;
+      color: var(--green);
+      font-size: 0.68rem;
+    }
+
+    .pulse {
+      width: 7px; height: 7px;
+      background: var(--green);
+      border-radius: 50%;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.7); }
+    }
+
+    /* ── HERO ── */
+    .hero {
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 5rem 2rem 3rem;
+    }
+
+    .deploy-label {
+      font-size: 0.7rem;
+      letter-spacing: 0.15em;
+      color: var(--green);
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+      opacity: 0;
+      animation: fadeUp 0.5s ease forwards 0.2s;
+    }
+
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2.4rem, 6vw, 4.2rem);
+      font-weight: 800;
+      color: var(--white);
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      opacity: 0;
+      animation: fadeUp 0.5s ease forwards 0.35s;
+    }
+
+    h1 span { color: var(--green); }
+
+    .tagline {
+      margin-top: 1.2rem;
+      font-size: 0.85rem;
+      color: var(--muted);
+      max-width: 520px;
+      line-height: 1.7;
+      opacity: 0;
+      animation: fadeUp 0.5s ease forwards 0.5s;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── PIPELINE ── */
+    .pipeline {
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
+      margin: 3.5rem auto 0;
+      padding: 0 2rem;
+    }
+
+    .pipeline-title {
+      font-size: 0.65rem;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+    }
+
+    .pipeline-steps {
+      display: flex;
+      align-items: stretch;
+      gap: 0;
+      overflow-x: auto;
+      padding-bottom: 0.5rem;
+    }
+
+    .step {
+      flex: 1;
+      min-width: 130px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 1rem 1.1rem;
+      position: relative;
+      cursor: default;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .step:not(:last-child)::after {
+      content: '›';
+      position: absolute;
+      right: -13px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-size: 1.2rem;
+      z-index: 2;
+    }
+
+    .step:first-child { border-radius: 6px 0 0 6px; }
+    .step:last-child  { border-radius: 0 6px 6px 0; }
+
+    .step.done   { border-color: var(--green-dim); }
+    .step.active { border-color: var(--blue); background: rgba(88,166,255,0.05); }
+    .step.wait   { border-color: var(--border); opacity: 0.5; }
+
+    .step-icon { font-size: 1.1rem; margin-bottom: 0.4rem; }
+    .step-name { font-size: 0.65rem; color: var(--muted); letter-spacing: 0.06em; }
+    .step-val  { font-size: 0.78rem; color: var(--white); margin-top: 0.2rem; font-weight: 600; }
+
+    .step.done  .step-val { color: var(--green); }
+    .step.active .step-val { color: var(--blue); }
+
+    /* ── CARDS ── */
+    .cards {
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
+      margin: 3rem auto 0;
+      padding: 0 2rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .card {
+      background: var(--surface);
+      padding: 1.5rem;
+      transition: background 0.2s;
+    }
+
+    .card:hover { background: #161b22; }
+
+    .card-tag {
+      font-size: 0.6rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.8rem;
+    }
+
+    .card h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1rem;
+      color: var(--white);
+      margin-bottom: 0.5rem;
+    }
+
+    .card p {
+      font-size: 0.72rem;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    .card .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      margin-top: 1rem;
+    }
+
+    .tag {
+      font-size: 0.6rem;
+      padding: 2px 8px;
+      border-radius: 3px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+
+    .tag.green { border-color: var(--green-dim); color: var(--green); }
+    .tag.blue  { border-color: #1f3a5f; color: var(--blue); }
+    .tag.amber { border-color: #6b4a12; color: var(--amber); }
+
+    /* ── TERMINAL ── */
+    .terminal-wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
+      margin: 3rem auto 0;
+      padding: 0 2rem;
+    }
+
+    .terminal {
+      background: #0d1117;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .terminal-bar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0.6rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot.r { background: #ff5f56; }
+    .dot.y { background: #ffbd2e; }
+    .dot.g { background: #27c93f; }
+
+    .terminal-title {
+      margin-left: 0.5rem;
+      font-size: 0.65rem;
+      color: var(--muted);
+      flex: 1;
+      text-align: center;
+    }
+
+    .terminal-body {
+      padding: 1.2rem 1.4rem;
+      font-size: 0.75rem;
+      line-height: 2;
+      min-height: 200px;
+      max-height: 320px;
+      overflow-y: auto;
+    }
+
+    .terminal-body::-webkit-scrollbar { width: 4px; }
+    .terminal-body::-webkit-scrollbar-track { background: transparent; }
+    .terminal-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .log-line { display: flex; gap: 0.8rem; }
+    .log-line .ts  { color: var(--muted); flex-shrink: 0; }
+    .log-line .msg { color: var(--text); }
+    .log-line .msg.ok  { color: var(--green); }
+    .log-line .msg.info { color: var(--blue); }
+    .log-line .msg.warn { color: var(--amber); }
+    .log-line .msg.err  { color: var(--red); }
+
+    .cursor {
+      display: inline-block;
+      width: 7px;
+      height: 13px;
+      background: var(--green);
+      vertical-align: middle;
+      animation: blink 1s step-end infinite;
+    }
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+    /* ── SKILLS BAR ── */
+    .skills {
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
+      margin: 3rem auto 0;
+      padding: 0 2rem;
+    }
+
+    .skill-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.6rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .skill-name {
+      font-size: 0.7rem;
+      color: var(--muted);
+      width: 140px;
+      flex-shrink: 0;
+    }
+
+    .bar-bg {
+      flex: 1;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 2px;
+      background: var(--green);
+      width: 0;
+      transition: width 1.2s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    .bar-fill.blue  { background: var(--blue); }
+    .bar-fill.amber { background: var(--amber); }
+
+    .skill-pct {
+      font-size: 0.65rem;
+      color: var(--muted);
+      width: 32px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
+      margin: 4rem auto 0;
+      padding: 1.5rem 2rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.65rem;
+      color: var(--muted);
+    }
+
+    .footer-links { display: flex; gap: 1.2rem; }
+    .footer-links a { color: var(--muted); text-decoration: none; transition: color 0.2s; }
+    .footer-links a:hover { color: var(--green); }
+
+    /* responsive */
+    @media (max-width: 600px) {
+      .pipeline-steps { flex-direction: column; }
+      .step:not(:last-child)::after { display: none; }
+      .step:first-child { border-radius: 6px 6px 0 0; }
+      .step:last-child  { border-radius: 0 0 6px 6px; }
+      footer { flex-direction: column; gap: 0.8rem; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<header class="topbar">
+  <div class="topbar-left">
+    <span class="repo">pujan240/<strong>portfolio</strong></span>
+    <span class="branch">main</span>
+    <span>· workflow: <span style="color:var(--text)">deploy.yml</span></span>
+  </div>
+  <div class="status-pill">
+    <div class="pulse"></div>
+    deployed · s3 static hosting
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="deploy-label">✓ workflow run #42 · completed</div>
+  <h1>Hi, I'm Pujan.<br/>I build <span>pipelines</span> &amp;<br/>tame infrastructure.</h1>
+  <p class="tagline">
+    DevOps &amp; Data Engineer based near Sydney, NSW — open to full-time and remote roles.
+    Specialising in CI/CD, Kubernetes, Terraform, and cloud-native data platforms.
+  </p>
+</section>
+
+<!-- PIPELINE -->
+<section class="pipeline">
+  <div class="pipeline-title">// github actions · deploy pipeline</div>
+  <div class="pipeline-steps">
+    <div class="step done">
+      <div class="step-icon">📦</div>
+      <div class="step-name">checkout</div>
+      <div class="step-val">✓ done</div>
+    </div>
+    <div class="step done">
+      <div class="step-icon">🔧</div>
+      <div class="step-name">build</div>
+      <div class="step-val">✓ done</div>
+    </div>
+    <div class="step done">
+      <div class="step-icon">🔐</div>
+      <div class="step-name">configure aws</div>
+      <div class="step-val">✓ done</div>
+    </div>
+    <div class="step done">
+      <div class="step-icon">🚀</div>
+      <div class="step-name">s3 sync</div>
+      <div class="step-val">✓ done</div>
+    </div>
+    <div class="step done">
+      <div class="step-icon">⚡</div>
+      <div class="step-name">invalidate cdn</div>
+      <div class="step-val">✓ done</div>
+    </div>
+  </div>
+</section>
+
+<!-- SKILL CARDS -->
+<section class="cards">
+  <div class="card">
+    <div class="card-tag">// devops</div>
+    <h3>CI/CD &amp; Infrastructure</h3>
+    <p>End-to-end pipeline design with GitHub Actions, Docker, Kubernetes, and Terraform. Hands-on with Helm, Ingress controllers, and multi-service deployments.</p>
+    <div class="tags">
+      <span class="tag green">Kubernetes</span>
+      <span class="tag green">Terraform</span>
+      <span class="tag blue">Docker</span>
+      <span class="tag blue">GitHub Actions</span>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-tag">// data engineering</div>
+    <h3>Pipelines &amp; Platforms</h3>
+    <p>ETL pipeline design, healthcare dataset processing (HL7/FHIR-style), privacy-conscious data handling, and experience with cloud data warehousing.</p>
+    <div class="tags">
+      <span class="tag amber">Apache Airflow</span>
+      <span class="tag amber">dbt</span>
+      <span class="tag blue">Python</span>
+      <span class="tag green">AWS S3</span>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-tag">// cloud</div>
+    <h3>AWS &amp; Cloud Native</h3>
+    <p>Static site hosting, IAM roles for GitHub Actions OIDC, CloudFront CDN invalidation, S3 bucket policies, and cost-aware infrastructure design.</p>
+    <div class="tags">
+      <span class="tag green">S3</span>
+      <span class="tag green">CloudFront</span>
+      <span class="tag blue">IAM / OIDC</span>
+      <span class="tag amber">Route 53</span>
+    </div>
+  </div>
+</section>
+
+<!-- TERMINAL -->
+<div class="terminal-wrap">
+  <div class="terminal">
+    <div class="terminal-bar">
+      <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+      <span class="terminal-title">deploy.yml — github actions log</span>
+    </div>
+    <div class="terminal-body" id="termBody">
+      <!-- filled by JS -->
+    </div>
+  </div>
+</div>
+
+<!-- SKILLS BARS -->
+<section class="skills" id="skillsSection">
+  <div style="font-size:0.65rem;letter-spacing:0.12em;color:var(--muted);text-transform:uppercase;margin-bottom:1rem;">// stack proficiency</div>
+
+  <div class="skill-row">
+    <div class="skill-name">Kubernetes / Helm</div>
+    <div class="bar-bg"><div class="bar-fill" data-pct="78"></div></div>
+    <div class="skill-pct">78%</div>
+  </div>
+  <div class="skill-row">
+    <div class="skill-name">Terraform / IaC</div>
+    <div class="bar-bg"><div class="bar-fill" data-pct="74"></div></div>
+    <div class="skill-pct">74%</div>
+  </div>
+  <div class="skill-row">
+    <div class="skill-name">GitHub Actions</div>
+    <div class="bar-bg"><div class="bar-fill blue" data-pct="82"></div></div>
+    <div class="skill-pct">82%</div>
+  </div>
+  <div class="skill-row">
+    <div class="skill-name">Python / ETL</div>
+    <div class="bar-bg"><div class="bar-fill blue" data-pct="80"></div></div>
+    <div class="skill-pct">80%</div>
+  </div>
+  <div class="skill-row">
+    <div class="skill-name">AWS (S3, IAM, CF)</div>
+    <div class="bar-bg"><div class="bar-fill amber" data-pct="72"></div></div>
+    <div class="skill-pct">72%</div>
+  </div>
+  <div class="skill-row">
+    <div class="skill-name">Docker / Compose</div>
+    <div class="bar-bg"><div class="bar-fill" data-pct="85"></div></div>
+    <div class="skill-pct">85%</div>
+  </div>
+  <div class="skill-row">
+    <div class="skill-name">Linux / Bash</div>
+    <div class="bar-bg"><div class="bar-fill" data-pct="80"></div></div>
+    <div class="skill-pct">80%</div>
+  </div>
+</section>
+
+<footer>
+  <span>© 2025 Pujan · Sydney, NSW</span>
+  <div class="footer-links">
+    <a href="https://github.com/pujan240" target="_blank">GitHub</a>
+    <a href="https://linkedin.com" target="_blank">LinkedIn</a>
+    <a href="mailto:you@email.com">Contact</a>
+  </div>
+</footer>
+
+<script>
+  /* ── TERMINAL ANIMATION ── */
+  const logs = [
+    { ts: '00:00:01', cls: 'info', msg: 'Triggered by push to main' },
+    { ts: '00:00:02', cls: '',     msg: 'Runner: ubuntu-22.04' },
+    { ts: '00:00:03', cls: 'ok',   msg: '✓ actions/checkout@v4 complete' },
+    { ts: '00:00:05', cls: 'info', msg: 'Configuring AWS credentials via OIDC...' },
+    { ts: '00:00:06', cls: 'ok',   msg: '✓ AWS_REGION=ap-southeast-2' },
+    { ts: '00:00:07', cls: 'info', msg: 'Running: aws s3 sync ./dist s3://my-portfolio --delete' },
+    { ts: '00:00:09', cls: '',     msg: 'upload: dist/index.html → s3://my-portfolio/index.html' },
+    { ts: '00:00:09', cls: '',     msg: 'upload: dist/assets/main.css → s3://my-portfolio/assets/main.css' },
+    { ts: '00:00:10', cls: 'ok',   msg: '✓ S3 sync complete — 4 files uploaded' },
+    { ts: '00:00:11', cls: 'info', msg: 'Invalidating CloudFront distribution E1ABC2XYZ...' },
+    { ts: '00:00:13', cls: 'ok',   msg: '✓ Invalidation created: /*, status: InProgress' },
+    { ts: '00:00:14', cls: 'ok',   msg: '✓ Workflow complete — site live 🚀' },
+  ];
+
+  const body = document.getElementById('termBody');
+  let i = 0;
+
+  function addLine() {
+    if (i >= logs.length) {
+      // show cursor on last line
+      const cursor = document.createElement('span');
+      cursor.className = 'cursor';
+      body.appendChild(cursor);
+      return;
+    }
+    const { ts, cls, msg } = logs[i++];
+    const line = document.createElement('div');
+    line.className = 'log-line';
+    line.innerHTML = `<span class="ts">${ts}</span><span class="msg ${cls}">${msg}</span>`;
+    body.appendChild(line);
+    body.scrollTop = body.scrollHeight;
+    setTimeout(addLine, 350 + Math.random() * 250);
+  }
+
+  setTimeout(addLine, 800);
+
+  /* ── SKILLS BAR ANIMATION (IntersectionObserver) ── */
+  const section = document.getElementById('skillsSection');
+  const observer = new IntersectionObserver(entries => {
+    if (entries[0].isIntersecting) {
+      document.querySelectorAll('.bar-fill').forEach(bar => {
+        bar.style.width = bar.dataset.pct + '%';
+      });
+      observer.disconnect();
+    }
+  }, { threshold: 0.3 });
+  observer.observe(section);
+</script>
+</body>
+</html>
