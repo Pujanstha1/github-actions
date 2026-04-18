@@ -9,9 +9,9 @@ on:
         default: dev
         type: choice
         options:
-            - dev
-            - test
-            - production
+            - pujan
+            - sushmita
+            - shriyansh
       artifact_tag:
         description: Choose a tag for the deployment
         required: true
