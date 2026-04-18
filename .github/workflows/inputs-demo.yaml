@@ -7,10 +7,11 @@ on:
         description: Choose an environment to deploy
         required: true
         default: dev
+        type: choice
         options:
-            - pujan
-            - sushmita
-            - shriyansh
+            - dev
+            - test
+            - production
       artifact_tag:
         description: Choose a tag for the deployment
         required: true
