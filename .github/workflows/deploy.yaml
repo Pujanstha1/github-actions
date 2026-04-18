@@ -1,6 +1,6 @@
 name: Deploy HTML file to S3
 
-on: ["push", "workflow_dispatch"]
+on: ["push"]
 
 jobs: 
     deploy-me:
