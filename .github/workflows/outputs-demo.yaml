@@ -13,4 +13,4 @@ jobs:
                 echo "type=STRING" >> $GITHUB_OUTPUT
                 echo "The version is ${{ steps.step1.outputs.version }}"
             - name: Step Three
-              run: echo "The type is ${{ steps.step2.outputs.type }}"
+              run: echo "The type is ${{ steps.step2.outputs.type }}" 
