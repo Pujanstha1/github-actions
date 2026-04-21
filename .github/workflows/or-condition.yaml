@@ -1,0 +1,9 @@
+name: Or Condition
+on: push
+jobs:
+    demo:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Run for main or pujan
+              if: github.actor == 'main' || github.actor == 'pujan'
+              run: echo "This is triggered by either main or pujan"
