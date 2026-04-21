@@ -4,6 +4,6 @@ jobs:
     demo:
         runs-on: ubuntu-latest
         steps:
-            - name: Run for main or pujan
-              if: github.actor == 'main' || github.actor == 'pujan'
-              run: echo "This is triggered by either main or pujan"
+            - name: Run for main or Pujanstha1
+              if: github.actor == 'main' || github.actor == 'Pujanstha1'
+              run: echo "This is triggered by either main or Pujanstha1"
